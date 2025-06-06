@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tambah Menu</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Form Tambah Menu</h1>
+        <form id="menu-form" method="POST">
+            <label for="name">Nama:</label><br>
+            <input type="text" id="name" name="name" required><br><br>
+
+            <label for="description">Deskripsi:</label><br>
+            <textarea id="description" name="description"></textarea><br><br>
+
+            <label for="price">Harga:</label><br>
+            <input type="number" id="price" name="price" required><br><br>
+
+            <button type="submit" class="btn btn-primary">Simpan</button>
+        </form>
+        <a href="/" class="btn btn-secondary">← Kembali</a>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
