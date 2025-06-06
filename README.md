@@ -7,7 +7,7 @@ pip install -r requirements.txt
 
 step 2
 python init_db.py
-python app.py
+python run.py
 ```
 
 API available at `http://localhost:5000`
