@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+import requests
 from flask_graphql import GraphQLView
 from .graphql_schema import schema
 from .models import Menu
@@ -22,6 +23,16 @@ def add_menu():
         db.session.commit()
         return redirect(url_for('main.menu_list'))
     return render_template('add_menu.html')
+
+@main.route('/inventory')
+def inventory_list():
+    try:
+        response = requests.get('http://localhost:5002/api/inventory')
+        response.raise_for_status()
+        inventory_data = response.json()
+    except Exception as e:
+        inventory_data = []
+    return render_template('inventory_list.html', inventory=inventory_data)
 
 # GraphQL endpoint
 main.add_url_rule(
