@@ -48,7 +48,10 @@
                         <form id="inventoryForm">
                             <div class="mb-3">
                                 <label for="itemName" class="form-label">Nama Item</label>
-                                <input type="text" class="form-control" id="itemName" required>
+                                <select class="form-select" id="itemName" required>
+                                    <option value="" disabled selected>Pilih Nama Item</option>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label for="quantity" class="form-label">Jumlah</label>

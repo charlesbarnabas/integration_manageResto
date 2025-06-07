@@ -1,4 +1,3 @@
-// GraphQL endpoint
 const GRAPHQL_ENDPOINT = '/graphql';
 
 // GraphQL queries and mutations
@@ -42,6 +41,18 @@ const DELETE_ITEM = `
         }
     }
 `;
+
+// New GraphQL query to fetch menus from menu_service
+const MENU_SERVICE_GRAPHQL_ENDPOINT = 'http://localhost:5001/graphql';
+
+const GET_MENUS = `
+    query {
+        allMenus {
+            id
+            name
+        }
+    }
+`
 
 // Utility function to show toast notifications
 function showToast(message, type = 'success') {
@@ -109,6 +120,44 @@ async function fetchInventory() {
         });
     } catch (error) {
         showToast(error.message, 'danger');
+    }
+}
+
+// Function to fetch menu names from menu_service and populate the dropdown
+async function fetchMenuNames() {
+    try {
+        const response = await fetch(MENU_SERVICE_GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: GET_MENUS
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        const menuSelect = document.getElementById('itemName');
+        // Clear existing options except the placeholder
+        menuSelect.innerHTML = '<option value="" disabled selected>Pilih Nama Item</option>';
+        
+        if (data.data && data.data.allMenus && Array.isArray(data.data.allMenus)) {
+            data.data.allMenus.forEach(menu => {
+                const option = document.createElement('option');
+                option.value = menu.name;
+                option.textContent = menu.name;
+                menuSelect.appendChild(option);
+            });
+        } else {
+            showToast('Data menu tidak ditemukan atau format tidak sesuai', 'danger');
+            console.error('Unexpected menu data:', data);
+        }
+    } catch (error) {
+        showToast(`Gagal memuat menu: ${error.message}`, 'danger');
     }
 }
 
@@ -191,6 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial fetch of inventory
     fetchInventory();
     
+    // Fetch menu names to populate dropdown
+    fetchMenuNames();
+    
     // Form submission handler
     document.getElementById('inventoryForm').addEventListener('submit', addItem);
-}); 
+});
