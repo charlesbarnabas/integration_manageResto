@@ -1,39 +1,75 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
-import os
-from config import Config
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_graphql import GraphQLView
+from flask_login import LoginManager, current_user, login_user, logout_user
+from .extensions import db
+from .schema import schema
+from .models import User
 
-db = SQLAlchemy()
-bcrypt = Bcrypt()
 login_manager = LoginManager()
 
 @login_manager.user_loader
 def load_user(user_id):
-    from .models import User
     return User.query.get(int(user_id))
 
 def create_app():
     app = Flask(__name__)
-    
-    # Menggunakan konfigurasi dari config.py
-    app.config.from_object(Config)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = 'your-secret-key'  # Wajib untuk Flask-Login
 
-    # Inisialisasi ekstensi
     db.init_app(app)
-    bcrypt.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'main.login'
 
-    # Register blueprint
-    from .routes import bp
-    app.register_blueprint(bp)
+    app.add_url_rule(
+        '/graphql',
+        view_func=GraphQLView.as_view(
+            'graphql',
+            schema=schema,
+            graphiql=True  # Enable GraphiQL interface
+        )
+    )
 
-    # Buat instance folder jika belum ada
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    @app.route('/')
+    def index():
+        return render_template('index.html')
 
-    return app 
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            user = User.query.filter_by(username=username).first()
+            if user and user.password == password:  # Tanpa hash
+                login_user(user)
+                return redirect(url_for('index'))
+            flash('Invalid username or password')
+        return render_template('login.html')
+
+    @app.route('/register', methods=['GET', 'POST'])
+    def register():
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            if not username or not password:
+                flash('Please fill in all fields')
+                return redirect(url_for('register'))
+            user = User.query.filter_by(username=username).first()
+            if user:
+                flash('Username already exists')
+                return redirect(url_for('register'))
+            new_user = User(username=username, password=password)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful! Please login.')
+            return redirect(url_for('login'))
+        return render_template('register.html')
+
+    @app.route('/logout')
+    def logout():
+        logout_user()
+        return redirect(url_for('login'))
+
+    with app.app_context():
+        db.create_all()
+
+    return app

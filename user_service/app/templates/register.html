@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Create Account</h2>
+        <h2>Register</h2>
         
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -31,7 +31,7 @@
         </form>
         
         <div class="links">
-            <p>Already have an account? <a href="{{ url_for('main.login') }}">Login here</a></p>
+            <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
