@@ -13,8 +13,31 @@ def index():
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
-    # ... (tidak berubah)
-    pass
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Validasi password
+        if password != confirm_password:
+            flash('Passwords do not match')
+            return render_template('register.html')
+        
+        # Cek apakah username sudah ada
+        user = User.query.filter_by(username=username).first()
+        if user:
+            flash('Username already exists')
+            return render_template('register.html')
+        
+        # Buat user baru
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('Registration successful! Please login.')
+        return redirect(url_for('main.login'))
+        
+    return render_template('register.html')
 
 from flask import render_template, request, flash, redirect, url_for
 from flask_login import login_user
