@@ -1,0 +1,10 @@
+Flask==2.2.5
+Werkzeug==2.3.7
+Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.41
+PyYAML==6.0.1
+Flask-Login==0.6.2
+flask-bcrypt==1.0.1
+graphene-sqlalchemy==2.3.0
+flask-graphql==2.0.1
+graphql-core==2.3.2
