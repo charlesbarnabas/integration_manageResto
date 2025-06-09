@@ -1,47 +1,71 @@
-// GraphQL endpoint
 const GRAPHQL_ENDPOINT = '/graphql';
 
 // GraphQL queries and mutations
-const GET_INVENTORY = `
+const GET_INGREDIENTS = `
     query {
-        inventory {
+        ingredients {
             id
             name
             quantity
-            price
+            minimumStockLevel
+            reorderQuantity
+            unitOfMeasure
         }
     }
 `;
 
-const ADD_ITEM = `
-    mutation($name: String!, $quantity: Int!, $price: Float!) {
-        addItem(name: $name, quantity: $quantity, price: $price) {
+const ADD_INGREDIENT = `
+    mutation($name: String!, $quantity: Int!, $minimumStockLevel: Int!, $reorderQuantity: Int!, $unitOfMeasure: String!) {
+        addIngredient(name: $name, quantity: $quantity, minimumStockLevel: $minimumStockLevel, reorderQuantity: $reorderQuantity, unitOfMeasure: $unitOfMeasure) {
             id
             name
             quantity
-            price
+            minimumStockLevel
+            reorderQuantity
+            unitOfMeasure
         }
     }
 `;
 
-const UPDATE_ITEM = `
-    mutation($id: ID!, $name: String!, $quantity: Int!, $price: Float!) {
-        updateItem(id: $id, name: $name, quantity: $quantity, price: $price) {
+const UPDATE_INGREDIENT = `
+    mutation($id: ID!, $name: String!, $quantity: Int!, $minimumStockLevel: Int!, $reorderQuantity: Int!, $unitOfMeasure: String!) {
+        updateIngredient(
+            id: $id, 
+            name: $name, 
+            quantity: $quantity,
+            minimumStockLevel: $minimumStockLevel,
+            reorderQuantity: $reorderQuantity,
+            unitOfMeasure: $unitOfMeasure
+        ) {
             id
             name
             quantity
-            price
+            minimumStockLevel
+            reorderQuantity
+            unitOfMeasure
         }
     }
 `;
 
-const DELETE_ITEM = `
+const DELETE_INGREDIENT = `
     mutation($id: ID!) {
-        deleteItem(id: $id) {
+        deleteIngredient(id: $id) {
             success
         }
     }
 `;
+
+// New GraphQL query to fetch menus from menu_service
+const MENU_SERVICE_GRAPHQL_ENDPOINT = 'http://localhost:5001/graphql';
+
+const GET_MENUS = `
+    query {
+        allMenus {
+            id
+            name
+        }
+    }
+`
 
 // Utility function to show toast notifications
 function showToast(message, type = 'success') {
@@ -69,8 +93,7 @@ function showToast(message, type = 'success') {
     });
 }
 
-// Function to fetch and display inventory
-async function fetchInventory() {
+async function fetchIngredients() {
     try {
         const response = await fetch(GRAPHQL_ENDPOINT, {
             method: 'POST',
@@ -78,7 +101,7 @@ async function fetchInventory() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: GET_INVENTORY
+                query: GET_INGREDIENTS
             })
         });
         
@@ -87,38 +110,88 @@ async function fetchInventory() {
             throw new Error(data.errors[0].message);
         }
         
-        const inventoryList = document.getElementById('inventoryList');
-        inventoryList.innerHTML = '';
+        const ingredientList = document.getElementById('ingredientList');
+        ingredientList.innerHTML = '';
         
-        data.data.inventory.forEach(item => {
+        data.data.ingredients.forEach(ingredient => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${item.name}</td>
-                <td>${item.quantity}</td>
-                <td>Rp ${item.price.toLocaleString()}</td>
+                <td>${ingredient.name}</td>
+                <td>${ingredient.quantity}</td>
+                <td>${ingredient.minimumStockLevel !== null ? ingredient.minimumStockLevel : ''}</td>
+                <td>${ingredient.reorderQuantity !== null ? ingredient.reorderQuantity : ''}</td>
+                <td>${ingredient.unitOfMeasure !== null ? ingredient.unitOfMeasure : ''}</td>
                 <td>
-                    <button class="btn btn-sm btn-warning btn-action" onclick="editItem('${item.id}')">
+                    <button class="btn btn-sm btn-warning btn-action" onclick="editIngredient('${ingredient.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteItem('${item.id}')">
+                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteIngredient('${ingredient.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
-            inventoryList.appendChild(row);
+            ingredientList.appendChild(row);
         });
     } catch (error) {
         showToast(error.message, 'danger');
     }
 }
 
-// Function to add new item
-async function addItem(event) {
+const MENU_SERVICE_GRAPHQL_ENDPOINT_2 = 'http://localhost:5001/graphql';
+
+const GET_INGREDIENTS_FROM_MENU_SERVICE_2 = `
+    query {
+        allMenus {
+            ingredients {
+                ingredientName
+            }
+        }
+    }
+`;
+
+async function fetchIngredientNamesFromMenuService() {
+    try {
+        const response = await fetch(MENU_SERVICE_GRAPHQL_ENDPOINT_2, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: GET_INGREDIENTS_FROM_MENU_SERVICE_2
+            })
+        });
+        const result = await response.json();
+        if (result.errors) {
+            throw new Error(result.errors[0].message);
+        }
+        const menus = result.data.allMenus;
+        const ingredientSet = new Set();
+        menus.forEach(menu => {
+            menu.ingredients.forEach(ing => {
+                ingredientSet.add(ing.ingredientName);
+            });
+        });
+        const ingredientSelect = document.getElementById('ingredientName');
+        ingredientSelect.innerHTML = '<option value="" disabled selected>Pilih bahan</option>';
+        ingredientSet.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            ingredientSelect.appendChild(option);
+        });
+    } catch (error) {
+        showToast(`Gagal memuat bahan: ${error.message}`, 'danger');
+    }
+}
+
+async function addIngredient(event) {
     event.preventDefault();
     
-    const name = document.getElementById('itemName').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
-    const price = parseFloat(document.getElementById('price').value);
+    const name = document.getElementById('ingredientName').value;
+    const quantity = parseInt(document.getElementById('ingredientQuantity').value);
+    const minimumStockLevel = parseInt(document.getElementById('minimumStockLevel').value);
+    const reorderQuantity = parseInt(document.getElementById('reorderQuantity').value);
+    const unitOfMeasure = document.getElementById('unitOfMeasure').value;
     
     try {
         const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -127,8 +200,8 @@ async function addItem(event) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: ADD_ITEM,
-                variables: { name, quantity, price }
+                query: ADD_INGREDIENT,
+                variables: { name, quantity, minimumStockLevel, reorderQuantity, unitOfMeasure }
             })
         });
         
@@ -137,24 +210,101 @@ async function addItem(event) {
             throw new Error(data.errors[0].message);
         }
         
-        showToast('Item berhasil ditambahkan');
+        showToast('Bahan berhasil ditambahkan');
         event.target.reset();
-        fetchInventory();
+        fetchIngredients();
     } catch (error) {
         showToast(error.message, 'danger');
     }
 }
 
-// Function to edit item
-async function editItem(id) {
-    // Implementation for edit functionality
-    // This would typically open a modal with the item's current data
-    showToast('Fitur edit akan segera hadir', 'info');
+// Function to edit ingredient
+async function editIngredient(id) {
+    try {
+        // Find the ingredient in the current list
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: GET_INGREDIENTS
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        const ingredient = data.data.ingredients.find(i => i.id === id);
+        if (!ingredient) {
+            throw new Error('Bahan tidak ditemukan');
+        }
+        
+        // Populate the edit form
+        document.getElementById('editIngredientId').value = ingredient.id;
+        document.getElementById('editIngredientName').value = ingredient.name;
+        document.getElementById('editIngredientQuantity').value = ingredient.quantity;
+        document.getElementById('editMinimumStockLevel').value = ingredient.minimumStockLevel;
+        document.getElementById('editReorderQuantity').value = ingredient.reorderQuantity;
+        document.getElementById('editUnitOfMeasure').value = ingredient.unitOfMeasure;
+        
+        // Show the modal
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
 }
 
-// Function to delete item
-async function deleteItem(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus item ini?')) {
+// Function to submit edit
+async function submitEdit() {
+    const id = document.getElementById('editIngredientId').value;
+    const name = document.getElementById('editIngredientName').value;
+    const quantity = parseInt(document.getElementById('editIngredientQuantity').value);
+    const minimumStockLevel = parseInt(document.getElementById('editMinimumStockLevel').value);
+    const reorderQuantity = parseInt(document.getElementById('editReorderQuantity').value);
+    const unitOfMeasure = document.getElementById('editUnitOfMeasure').value;
+    
+    try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: UPDATE_INGREDIENT,
+                variables: { 
+                    id, 
+                    name, 
+                    quantity, 
+                    minimumStockLevel, 
+                    reorderQuantity, 
+                    unitOfMeasure 
+                }
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        // Close the modal
+        const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+        editModal.hide();
+        
+        showToast('Bahan berhasil diperbarui');
+        fetchIngredients(); // Refresh the list
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
+}
+
+// Function to delete ingredient
+async function deleteIngredient(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus bahan ini?')) {
         return;
     }
     
@@ -165,7 +315,7 @@ async function deleteItem(id) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: DELETE_ITEM,
+                query: DELETE_INGREDIENT,
                 variables: { id }
             })
         });
@@ -175,22 +325,24 @@ async function deleteItem(id) {
             throw new Error(data.errors[0].message);
         }
         
-        if (data.data.deleteItem.success) {
-            showToast('Item berhasil dihapus');
-            fetchInventory();
+        if (data.data.deleteIngredient.success) {
+            showToast('Bahan berhasil dihapus');
+            fetchIngredients();
         } else {
-            showToast('Item tidak ditemukan', 'warning');
+            showToast('Bahan tidak ditemukan', 'warning');
         }
     } catch (error) {
         showToast(error.message, 'danger');
     }
 }
 
-// Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial fetch of inventory
-    fetchInventory();
+    // Initial fetch of ingredients
+    fetchIngredients();
+    
+    // Fetch ingredient names from menu_service to populate dropdown
+    fetchIngredientNamesFromMenuService();
     
     // Form submission handler
-    document.getElementById('inventoryForm').addEventListener('submit', addItem);
-}); 
+    document.getElementById('ingredientForm').addEventListener('submit', addIngredient);
+});
