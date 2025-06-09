@@ -1,26 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8" />
     <title>Tambah Menu</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .ingredient-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .ingredient-row select, .ingredient-row input {
+            flex: 1;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Form Tambah Menu</h1>
-        <form id="menu-form" method="POST">
-            <label for="name">Nama:</label><br>
-            <input type="text" id="name" name="name" required><br><br>
+    <div class="layout">
+        <aside class="sidebar">
+            <h2>Restoran</h2>
+            <ul>
+                <li><a href="/" style="color: blue; text-decoration: underline; font-weight: bold;">📋 Menu</a></li>
+                <li><a href="http://localhost:5002/">📊 Inventory</a></li>
+                <li>💳 Transaksi</li>
+                <li>⚙️ Procurement</li>
+            </ul>
+        </aside>
 
-            <label for="description">Deskripsi:</label><br>
-            <textarea id="description" name="description"></textarea><br><br>
+        <main class="content">
+            <header class="content-header">
+                <h1>Tambah Menu</h1>
+                <a href="/" class="btn btn-secondary">← Kembali</a>
+            </header>
 
-            <label for="price">Harga:</label><br>
-            <input type="number" id="price" name="price" required><br><br>
+            <div class="form-container" style="max-width: 600px; padding: 15px; background: #f9f9f9; border: 1px solid #ccc;">
+                <form id="menu-form" method="POST" onsubmit="return submitForm(event);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <label for="name" style="flex: 1; min-width: 100px;">Nama Menu</label>
+                        <input type="text" id="name" name="name" required style="flex: 3; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
 
-            <button type="submit" class="btn btn-primary">Simpan</button>
-        </form>
-        <a href="/" class="btn btn-secondary">← Kembali</a>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <label for="description" style="flex: 1; min-width: 100px;">Deskripsi</label>
+                        <textarea id="description" name="description" style="flex: 3; padding: 6px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <label for="price" style="flex: 1; min-width: 100px;">Harga</label>
+                        <input type="number" id="price" name="price" required style="flex: 3; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+
+                    <label>Bahan</label>
+                    <div id="ingredients-container">
+                        <div class="ingredient-row">
+                            <input type="text" name="ingredient_name" placeholder="Nama bahan" required />
+                            <input type="number" name="quantity" placeholder="Jumlah" min="0" step="any" required />
+                            <button type="button" class="btn btn-secondary" onclick="this.parentElement.remove()">Hapus</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn primary" style="margin-top: 10px;" onclick="addIngredientRow('ingredients-container')">+ Tambah Bahan</button>
+
+                    <button type="submit" class="btn primary" style="margin-top: 15px;">Simpan</button>
+                </form>
+            </div>
+        </main>
     </div>
-    <script src="/static/script.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

@@ -1,12 +1,41 @@
 import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType
-from .models import Menu as MenuModel
+from .models import Menu as MenuModel, MenuIngredient as MenuIngredientModel
 from . import db
+
+# Object Type untuk MenuIngredient
+class MenuIngredient(SQLAlchemyObjectType):
+    class Meta:
+        model = MenuIngredientModel
 
 # Object Type untuk Menu
 class Menu(SQLAlchemyObjectType):
     class Meta:
         model = MenuModel
+        fields = ("id", "name", "price", "description")
+
+    ingredients = graphene.List(lambda: MenuIngredient)
+
+    def resolve_ingredients(self, info):
+        return self.ingredients
+# Fix field name for ingredientName to ingredient_name to match model attribute
+class MenuIngredient(SQLAlchemyObjectType):
+    class Meta:
+        model = MenuIngredientModel
+        fields = ("id", "ingredient_name", "quantity")
+
+    ingredientName = graphene.String()
+    quantity = graphene.Float()
+
+    def resolve_ingredientName(self, info):
+        return self.ingredient_name
+# Fix field name in GraphQL to ingredientName to match frontend query
+MenuIngredient.ingredientName = graphene.String()
+
+def resolve_ingredientName(self, info):
+    return self.ingredient_name
+
+MenuIngredient.resolve_ingredientName = resolve_ingredientName
 
 # Query semua menu
 class Query(graphene.ObjectType):

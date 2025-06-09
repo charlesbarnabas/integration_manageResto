@@ -1,42 +1,45 @@
 const GRAPHQL_ENDPOINT = '/graphql';
 
 // GraphQL queries and mutations
-const GET_INVENTORY = `
+const GET_INGREDIENTS = `
     query {
-        inventory {
+        ingredients {
             id
             name
             quantity
-            price
+            minimumStockLevel
+            reorderQuantity
+            unitOfMeasure
         }
     }
 `;
 
-const ADD_ITEM = `
-    mutation($name: String!, $quantity: Int!, $price: Float!) {
-        addItem(name: $name, quantity: $quantity, price: $price) {
+const ADD_INGREDIENT = `
+    mutation($name: String!, $quantity: Int!, $minimumStockLevel: Int!, $reorderQuantity: Int!, $unitOfMeasure: String!) {
+        addIngredient(name: $name, quantity: $quantity, minimumStockLevel: $minimumStockLevel, reorderQuantity: $reorderQuantity, unitOfMeasure: $unitOfMeasure) {
             id
             name
             quantity
-            price
+            minimumStockLevel
+            reorderQuantity
+            unitOfMeasure
         }
     }
 `;
 
-const UPDATE_ITEM = `
-    mutation($id: ID!, $name: String!, $quantity: Int!, $price: Float!) {
-        updateItem(id: $id, name: $name, quantity: $quantity, price: $price) {
+const UPDATE_INGREDIENT = `
+    mutation($id: ID!, $name: String, $quantity: Int) {
+        updateIngredient(id: $id, name: $name, quantity: $quantity) {
             id
             name
             quantity
-            price
         }
     }
 `;
 
-const DELETE_ITEM = `
+const DELETE_INGREDIENT = `
     mutation($id: ID!) {
-        deleteItem(id: $id) {
+        deleteIngredient(id: $id) {
             success
         }
     }
@@ -80,8 +83,7 @@ function showToast(message, type = 'success') {
     });
 }
 
-// Function to fetch and display inventory
-async function fetchInventory() {
+async function fetchIngredients() {
     try {
         const response = await fetch(GRAPHQL_ENDPOINT, {
             method: 'POST',
@@ -89,7 +91,7 @@ async function fetchInventory() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: GET_INVENTORY
+                query: GET_INGREDIENTS
             })
         });
         
@@ -98,76 +100,88 @@ async function fetchInventory() {
             throw new Error(data.errors[0].message);
         }
         
-        const inventoryList = document.getElementById('inventoryList');
-        inventoryList.innerHTML = '';
+        const ingredientList = document.getElementById('ingredientList');
+        ingredientList.innerHTML = '';
         
-        data.data.inventory.forEach(item => {
+        data.data.ingredients.forEach(ingredient => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${item.name}</td>
-                <td>${item.quantity}</td>
-                <td>Rp ${item.price.toLocaleString()}</td>
+                <td>${ingredient.name}</td>
+                <td>${ingredient.quantity}</td>
+                <td>${ingredient.minimumStockLevel !== null ? ingredient.minimumStockLevel : ''}</td>
+                <td>${ingredient.reorderQuantity !== null ? ingredient.reorderQuantity : ''}</td>
+                <td>${ingredient.unitOfMeasure !== null ? ingredient.unitOfMeasure : ''}</td>
                 <td>
-                    <button class="btn btn-sm btn-warning btn-action" onclick="editItem('${item.id}')">
+                    <button class="btn btn-sm btn-warning btn-action" onclick="editIngredient('${ingredient.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteItem('${item.id}')">
+                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteIngredient('${ingredient.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
-            inventoryList.appendChild(row);
+            ingredientList.appendChild(row);
         });
     } catch (error) {
         showToast(error.message, 'danger');
     }
 }
 
-// Function to fetch menu names from menu_service and populate the dropdown
-async function fetchMenuNames() {
+const MENU_SERVICE_GRAPHQL_ENDPOINT_2 = 'http://localhost:5001/graphql';
+
+const GET_INGREDIENTS_FROM_MENU_SERVICE_2 = `
+    query {
+        allMenus {
+            ingredients {
+                ingredientName
+            }
+        }
+    }
+`;
+
+async function fetchIngredientNamesFromMenuService() {
     try {
-        const response = await fetch(MENU_SERVICE_GRAPHQL_ENDPOINT, {
+        const response = await fetch(MENU_SERVICE_GRAPHQL_ENDPOINT_2, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: GET_MENUS
+                query: GET_INGREDIENTS_FROM_MENU_SERVICE_2
             })
         });
-        
-        const data = await response.json();
-        if (data.errors) {
-            throw new Error(data.errors[0].message);
+        const result = await response.json();
+        if (result.errors) {
+            throw new Error(result.errors[0].message);
         }
-        
-        const menuSelect = document.getElementById('itemName');
-        // Clear existing options except the placeholder
-        menuSelect.innerHTML = '<option value="" disabled selected>Pilih Nama Item</option>';
-        
-        if (data.data && data.data.allMenus && Array.isArray(data.data.allMenus)) {
-            data.data.allMenus.forEach(menu => {
-                const option = document.createElement('option');
-                option.value = menu.name;
-                option.textContent = menu.name;
-                menuSelect.appendChild(option);
+        const menus = result.data.allMenus;
+        const ingredientSet = new Set();
+        menus.forEach(menu => {
+            menu.ingredients.forEach(ing => {
+                ingredientSet.add(ing.ingredientName);
             });
-        } else {
-            showToast('Data menu tidak ditemukan atau format tidak sesuai', 'danger');
-            console.error('Unexpected menu data:', data);
-        }
+        });
+        const ingredientSelect = document.getElementById('ingredientName');
+        ingredientSelect.innerHTML = '<option value="" disabled selected>Pilih bahan</option>';
+        ingredientSet.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            ingredientSelect.appendChild(option);
+        });
     } catch (error) {
-        showToast(`Gagal memuat menu: ${error.message}`, 'danger');
+        showToast(`Gagal memuat bahan: ${error.message}`, 'danger');
     }
 }
 
-// Function to add new item
-async function addItem(event) {
+async function addIngredient(event) {
     event.preventDefault();
     
-    const name = document.getElementById('itemName').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
-    const price = parseFloat(document.getElementById('price').value);
+    const name = document.getElementById('ingredientName').value;
+    const quantity = parseInt(document.getElementById('ingredientQuantity').value);
+    const minimumStockLevel = parseInt(document.getElementById('minimumStockLevel').value);
+    const reorderQuantity = parseInt(document.getElementById('reorderQuantity').value);
+    const unitOfMeasure = document.getElementById('unitOfMeasure').value;
     
     try {
         const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -176,8 +190,8 @@ async function addItem(event) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: ADD_ITEM,
-                variables: { name, quantity, price }
+                query: ADD_INGREDIENT,
+                variables: { name, quantity, minimumStockLevel, reorderQuantity, unitOfMeasure }
             })
         });
         
@@ -186,24 +200,24 @@ async function addItem(event) {
             throw new Error(data.errors[0].message);
         }
         
-        showToast('Item berhasil ditambahkan');
+        showToast('Bahan berhasil ditambahkan');
         event.target.reset();
-        fetchInventory();
+        fetchIngredients();
     } catch (error) {
         showToast(error.message, 'danger');
     }
 }
 
-// Function to edit item
-async function editItem(id) {
+// Function to edit ingredient
+async function editIngredient(id) {
     // Implementation for edit functionality
-    // This would typically open a modal with the item's current data
+    // This would typically open a modal with the ingredient's current data
     showToast('Fitur edit akan segera hadir', 'info');
 }
 
-// Function to delete item
-async function deleteItem(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus item ini?')) {
+// Function to delete ingredient
+async function deleteIngredient(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus bahan ini?')) {
         return;
     }
     
@@ -214,7 +228,7 @@ async function deleteItem(id) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: DELETE_ITEM,
+                query: DELETE_INGREDIENT,
                 variables: { id }
             })
         });
@@ -224,25 +238,24 @@ async function deleteItem(id) {
             throw new Error(data.errors[0].message);
         }
         
-        if (data.data.deleteItem.success) {
-            showToast('Item berhasil dihapus');
-            fetchInventory();
+        if (data.data.deleteIngredient.success) {
+            showToast('Bahan berhasil dihapus');
+            fetchIngredients();
         } else {
-            showToast('Item tidak ditemukan', 'warning');
+            showToast('Bahan tidak ditemukan', 'warning');
         }
     } catch (error) {
         showToast(error.message, 'danger');
     }
 }
 
-// Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial fetch of inventory
-    fetchInventory();
+    // Initial fetch of ingredients
+    fetchIngredients();
     
-    // Fetch menu names to populate dropdown
-    fetchMenuNames();
+    // Fetch ingredient names from menu_service to populate dropdown
+    fetchIngredientNamesFromMenuService();
     
     // Form submission handler
-    document.getElementById('inventoryForm').addEventListener('submit', addItem);
+    document.getElementById('ingredientForm').addEventListener('submit', addIngredient);
 });
