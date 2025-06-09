@@ -2,9 +2,15 @@
 step 1 
 cd user_service
 python -m venv venv
-.\venv\Scripts\activate
+.\venv\Scripts\activate 
 pip install -r requirements.txt
 pip install requests
+
+atau
+cd ..._service
+.\venv\Scripts\Activate.ps1
+python run.py
+
 step 2
 python init_db.py
 python run.py
