@@ -33,7 +33,6 @@ def get_menu_ingredients():
         result = connection.execute(text("SELECT DISTINCT ingredient_name FROM menu_ingredient"))
         ingredients = [row[0] for row in result]
     return jsonify({'ingredients': ingredients})
-
 # GraphQL endpoint
 main.add_url_rule(
     '/graphql',
@@ -43,3 +42,4 @@ main.add_url_rule(
         graphiql=True  # Enable GraphiQL interface
     )
 )
+

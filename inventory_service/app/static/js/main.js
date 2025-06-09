@@ -28,11 +28,21 @@ const ADD_INGREDIENT = `
 `;
 
 const UPDATE_INGREDIENT = `
-    mutation($id: ID!, $name: String, $quantity: Int) {
-        updateIngredient(id: $id, name: $name, quantity: $quantity) {
+    mutation($id: ID!, $name: String!, $quantity: Int!, $minimumStockLevel: Int!, $reorderQuantity: Int!, $unitOfMeasure: String!) {
+        updateIngredient(
+            id: $id, 
+            name: $name, 
+            quantity: $quantity,
+            minimumStockLevel: $minimumStockLevel,
+            reorderQuantity: $reorderQuantity,
+            unitOfMeasure: $unitOfMeasure
+        ) {
             id
             name
             quantity
+            minimumStockLevel
+            reorderQuantity
+            unitOfMeasure
         }
     }
 `;
@@ -210,9 +220,86 @@ async function addIngredient(event) {
 
 // Function to edit ingredient
 async function editIngredient(id) {
-    // Implementation for edit functionality
-    // This would typically open a modal with the ingredient's current data
-    showToast('Fitur edit akan segera hadir', 'info');
+    try {
+        // Find the ingredient in the current list
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: GET_INGREDIENTS
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        const ingredient = data.data.ingredients.find(i => i.id === id);
+        if (!ingredient) {
+            throw new Error('Bahan tidak ditemukan');
+        }
+        
+        // Populate the edit form
+        document.getElementById('editIngredientId').value = ingredient.id;
+        document.getElementById('editIngredientName').value = ingredient.name;
+        document.getElementById('editIngredientQuantity').value = ingredient.quantity;
+        document.getElementById('editMinimumStockLevel').value = ingredient.minimumStockLevel;
+        document.getElementById('editReorderQuantity').value = ingredient.reorderQuantity;
+        document.getElementById('editUnitOfMeasure').value = ingredient.unitOfMeasure;
+        
+        // Show the modal
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
+}
+
+// Function to submit edit
+async function submitEdit() {
+    const id = document.getElementById('editIngredientId').value;
+    const name = document.getElementById('editIngredientName').value;
+    const quantity = parseInt(document.getElementById('editIngredientQuantity').value);
+    const minimumStockLevel = parseInt(document.getElementById('editMinimumStockLevel').value);
+    const reorderQuantity = parseInt(document.getElementById('editReorderQuantity').value);
+    const unitOfMeasure = document.getElementById('editUnitOfMeasure').value;
+    
+    try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: UPDATE_INGREDIENT,
+                variables: { 
+                    id, 
+                    name, 
+                    quantity, 
+                    minimumStockLevel, 
+                    reorderQuantity, 
+                    unitOfMeasure 
+                }
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        // Close the modal
+        const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+        editModal.hide();
+        
+        showToast('Bahan berhasil diperbarui');
+        fetchIngredients(); // Refresh the list
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
 }
 
 // Function to delete ingredient
