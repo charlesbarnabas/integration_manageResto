@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS  # Import CORS
 import os
 
 # Initialize extensions
@@ -7,6 +8,7 @@ db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)  # Initialize CORS
     
     # Database configuration
     basedir = os.path.abspath(os.path.dirname(__file__))
