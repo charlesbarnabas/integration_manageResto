@@ -11,6 +11,8 @@ login_manager = LoginManager()
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+from .routes import bp as main_bp
+
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
@@ -19,6 +21,8 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
+
+    app.register_blueprint(main_bp)
 
     app.add_url_rule(
         '/graphql',
@@ -33,17 +37,7 @@ def create_app():
     def index():
         return render_template('index.html')
 
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            user = User.query.filter_by(username=username).first()
-            if user and user.password == password:  # Tanpa hash
-                login_user(user)
-                return redirect(url_for('index'))
-            flash('Invalid username or password')
-        return render_template('login.html')
+    # Removed login route from here because it is now in routes.py blueprint
 
     @app.route('/register', methods=['GET', 'POST'])
     def register():

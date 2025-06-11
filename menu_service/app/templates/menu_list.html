@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manajemen Menu</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    #edit-form.hidden {
+      display: none;
+    }
+    #edit-form {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      max-width: 600px;
+    }
+    #edit-form label {
+      display: block;
+      margin-top: 10px;
+    }
+    #edit-form input, #edit-form textarea, #edit-form select {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    #edit-form button {
+      margin-top: 15px;
+      padding: 8px 12px;
+    }
+    .link {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+      margin-right: 10px;
+    }
+    .link.delete {
+      color: red;
+    }
+    aside.sidebar ul li a {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+      padding: 5px 10px;
+    }
+    aside.sidebar ul li a:hover {
+      background-color: #ddd;
+      color: blue;
+    }
+    .ingredient-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+    .ingredient-row select, .ingredient-row input {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Restoran</h2>
+      <ul>
+        <li class="active">📋 Menu</li>
+        <li><a href="http://localhost:5002/" style="color: blue; text-decoration: underline; font-weight: bold;">📊 Inventory</a></li>
+        <li>💳 Transaksi</li>
+        <li><a href="http://localhost:5003/" style="color: inherit; text-decoration: none;">⚙️ Procurement</a></li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <header class="content-header">
+        <h1>Manajemen Menu</h1>
+        <div class="top-controls">
+          <input type="text" id="search" placeholder="🔍 Cari menu..." />
+          <a href="/add" class="btn primary">+ Tambah Menu</a>
+        </div>
+      </header>
+
+      <table class="menu-table">
+        <thead>
+          <tr>
+            <th>Nama Menu</th>
+            <th>Harga</th>
+            <th>Bahan</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="menu-container"></tbody>
+      </table>
+
+      <form id="edit-form" class="hidden" onsubmit="event.preventDefault(); submitEdit();">
+        <h3>Edit Menu</h3>
+        <input type="hidden" id="edit-id" />
+        <label for="edit-name">Nama Menu</label>
+        <input type="text" id="edit-name" required />
+        
+        <label for="edit-price">Harga</label>
+        <input type="number" id="edit-price" min="0" required />
+        
+        <label for="edit-description">Deskripsi</label>
+        <textarea id="edit-description" rows="3"></textarea>
+
+        <label>Bahan</label>
+        <div id="edit-ingredients"></div>
+        <button type="button" onclick="addIngredientRow('edit-ingredients')">+ Tambah Bahan</button>
+        
+        <button type="submit" class="btn primary">Simpan Perubahan</button>
+        <button type="button" onclick="document.getElementById('edit-form').classList.add('hidden')">Batal</button>
+      </form>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
