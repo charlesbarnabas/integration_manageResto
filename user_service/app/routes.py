@@ -52,29 +52,41 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.password == password:  # Tanpa hash
             login_user(user)
-            return redirect('http://localhost:5001/')
+            return redirect('http://localhost:5001/?user=' + user.username)
         flash('Invalid username or password')
     return render_template('login.html')
 
-@bp.route('/logout')
-@login_required
+@bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     logout_user()
-    return redirect(url_for('main.login'))
+    return redirect('http://localhost:5000/login')
 
-# ✅ Tambahkan route ini untuk integrasi ke menu_service
 @bp.route('/menus')
 @login_required
 def user_menus():
     try:
         response = requests.post(
-            'http://localhost:5001/graphql',  # ganti sesuai URL service kamu
+            'http://localhost:5001/graphql',  
             json={"query": "{ all_menus { id name description price } }"},
             headers={'Content-Type': 'application/json'}
         )
         data = response.json()
         menus = data.get("data", {}).get("all_menus", [])
-        return render_template('user_menu.html', menus=menus)
+        return render_template('menulist.html', menus=menus)
     except Exception as e:
         flash(f"Gagal memuat menu: {str(e)}", 'error')
-        return render_template('user_menu.html', menus=[])
+        return render_template('menulist.html', menus=[])
+
+@bp.route('/api/users/register', methods=['POST'])
+def api_register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return {'error': 'username and password required'}, 400
+    if User.query.filter_by(username=username).first():
+        return {'error': 'Username already exists'}, 400
+    new_user = User(username=username, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+    return {'message': 'Registration successful!'}, 201

@@ -9,8 +9,9 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 def menu_list():
+    username = request.args.get('user', 'Guest')
     menus = Menu.query.all()
-    return render_template('menu_list.html', menus=menus)
+    return render_template('menu_list.html', menus=menus, username=username)
 
 @main.route('/add', methods=['GET', 'POST'])
 def add_menu(): 

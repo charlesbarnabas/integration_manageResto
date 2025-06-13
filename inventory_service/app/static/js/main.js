@@ -93,6 +93,55 @@ function showToast(message, type = 'success') {
     });
 }
 
+function filterIngredients(keyword) {
+    const rows = document.querySelectorAll('#ingredientList tr');
+    const lowerKeyword = keyword.toLowerCase();
+    rows.forEach(row => {
+        const cellsText = row.textContent.toLowerCase();
+        if (cellsText.includes(lowerKeyword)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial fetch of ingredients
+    fetchIngredients();
+    
+    // Fetch ingredient names from menu_service to populate dropdown
+    fetchIngredientNamesFromMenuService();
+    
+    // Form submission handler
+    document.getElementById('ingredientForm').addEventListener('submit', addIngredient);
+
+    // Search bar handler: filter saat mengetik
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            filterIngredients(this.value);
+        });
+    }
+
+    // Event listener for when the edit modal is shown
+    const editModalElement = document.getElementById('editModal');
+    if (editModalElement) {
+        editModalElement.addEventListener('shown.bs.modal', () => {
+            // Populate the form fields here, after the modal is fully shown
+            const ingredient = editModalElement.dataset.currentIngredient ? JSON.parse(editModalElement.dataset.currentIngredient) : null;
+            if (ingredient) {
+                document.getElementById('editIngredientId').value = ingredient.id;
+                document.getElementById('editIngredientName').value = ingredient.name;
+                document.getElementById('editIngredientQuantity').value = ingredient.quantity;
+                document.getElementById('editMinimumStockLevel').value = ingredient.minimumStockLevel;
+                document.getElementById('editReorderQuantity').value = ingredient.reorderQuantity;
+                document.getElementById('editUnitOfMeasure').value = ingredient.unitOfMeasure;
+            }
+        });
+    }
+});
+
 async function fetchIngredients() {
     try {
         const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -122,12 +171,8 @@ async function fetchIngredients() {
                 <td>${ingredient.reorderQuantity !== null ? ingredient.reorderQuantity : ''}</td>
                 <td>${ingredient.unitOfMeasure !== null ? ingredient.unitOfMeasure : ''}</td>
                 <td>
-                    <button class="btn btn-sm btn-warning btn-action" onclick="editIngredient('${ingredient.id}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteIngredient('${ingredient.id}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button class="btn btn-action btn-primary" onclick="editIngredient('${ingredient.id}')">Edit</button>
+                    <button class="btn btn-action btn-danger" onclick="deleteIngredient('${ingredient.id}')">Hapus</button>
                 </td>
             `;
             ingredientList.appendChild(row);
@@ -218,9 +263,42 @@ async function addIngredient(event) {
     }
 }
 
+document.getElementById('ingredientForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('ingredientName').value;
+    const quantity = document.getElementById('ingredientQuantity').value;
+    const minimumStockLevel = document.getElementById('minimumStockLevel').value;
+    const reorderQuantity = document.getElementById('reorderQuantity').value;
+    const unitOfMeasure = document.getElementById('unitOfMeasure').value;
+
+    const response = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name,
+            quantity: Number(quantity),
+            minimumStockLevel: Number(minimumStockLevel),
+            reorderQuantity: Number(reorderQuantity),
+            unitOfMeasure
+        })
+    });
+
+    if (response.ok) {
+        // Refresh tabel dan reset form
+        fetchIngredients();
+        this.reset();
+    } else {
+        const data = await response.json();
+        alert(data.error || 'Gagal menambah bahan');
+    }
+});
+
 // Function to edit ingredient
 async function editIngredient(id) {
+    console.log('editIngredient called with id:', id);
     try {
+        const ingredientIdNum = parseInt(id); // Parse the ID to an integer
+        console.log('Parsed ingredientIdNum:', ingredientIdNum);
         // Find the ingredient in the current list
         const response = await fetch(GRAPHQL_ENDPOINT, {
             method: 'POST',
@@ -237,21 +315,19 @@ async function editIngredient(id) {
             throw new Error(data.errors[0].message);
         }
         
-        const ingredient = data.data.ingredients.find(i => i.id === id);
+        console.log('Fetched ingredients:', data.data.ingredients);
+        const ingredient = data.data.ingredients.find(i => parseInt(i.id) === ingredientIdNum);
+        console.log('Found ingredient:', ingredient);
         if (!ingredient) {
             throw new Error('Bahan tidak ditemukan');
         }
         
-        // Populate the edit form
-        document.getElementById('editIngredientId').value = ingredient.id;
-        document.getElementById('editIngredientName').value = ingredient.name;
-        document.getElementById('editIngredientQuantity').value = ingredient.quantity;
-        document.getElementById('editMinimumStockLevel').value = ingredient.minimumStockLevel;
-        document.getElementById('editReorderQuantity').value = ingredient.reorderQuantity;
-        document.getElementById('editUnitOfMeasure').value = ingredient.unitOfMeasure;
+        // Store ingredient data in the modal dataset for access when modal is shown
+        const editModalElement = document.getElementById('editModal');
+        editModalElement.dataset.currentIngredient = JSON.stringify(ingredient);
         
         // Show the modal
-        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        const editModal = new bootstrap.Modal(editModalElement);
         editModal.show();
     } catch (error) {
         showToast(error.message, 'danger');

@@ -1,3 +1,21 @@
+document.getElementById('search').addEventListener('input', function (e) {
+  const keyword = e.target.value.toLowerCase();
+  filterMenu(keyword);
+});
+
+function filterMenu(keyword) {
+  const rows = document.querySelectorAll('#menu-container tr');
+  rows.forEach(row => {
+    const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+    const ingredients = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+    if (name.includes(keyword) || ingredients.includes(keyword)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
 async function fetchInventory() {
     try {
         const response = await fetch('http://localhost:5002/api/inventory');
@@ -37,7 +55,8 @@ function addIngredientRow(containerId, ingredient = null) {
 
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
-    removeBtn.textContent = 'Menghapus';
+    removeBtn.innerHTML = '🗑️ Hapus';
+    removeBtn.className = 'btn delete-ingredient';
     removeBtn.onclick = () => container.removeChild(row);
 
     row.appendChild(ingredientInput);
@@ -81,6 +100,8 @@ async function submitForm(event) {
     }
     return false;
 }
+
+
 
 async function loadMenu() {
     const response = await fetch('/api/menus');
