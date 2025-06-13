@@ -1,6 +1,7 @@
 Flask
 Flask-SQLAlchemy
+Flask-GraphQL
 graphene
 graphene-sqlalchemy
-Flask-GraphQL
-requests
+SQLAlchemy
+requests 

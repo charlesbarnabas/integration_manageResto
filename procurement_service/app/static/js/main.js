@@ -1,139 +1,249 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const orderForm = document.getElementById('orderForm');
-    const ordersTableBody = document.getElementById('ordersTableBody');
-    const ingredientSelect = document.getElementById('ingredientName');
-    const quantityInput = document.getElementById('quantityOrdered');
-    const supplierInput = document.getElementById('supplier');
+const GRAPHQL_ENDPOINT = '/graphql';
 
-    let inventoryData = [];
-
-    // Fetch inventory ingredients from inventory_service
-    async function fetchInventory() {
-        try {
-            const response = await fetch('http://localhost:5002/api/inventory');
-            const data = await response.json();
-            inventoryData = data;
-            populateIngredientDropdown();
-        } catch (error) {
-            console.error('Error fetching inventory:', error);
+// GraphQL queries and mutations for Procurement Service
+const GET_PROCUREMENT_ORDERS = `
+    query {
+        procurementOrders {
+            id
+            ingredientName
+            quantityOrdered
+            supplier
+            status
+            orderDate
         }
     }
+`;
 
-    // Populate ingredient dropdown
-    function populateIngredientDropdown() {
-        ingredientSelect.innerHTML = '<option value="">Select Ingredient</option>';
-        inventoryData.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.name;
-            option.textContent = item.name;
-            option.dataset.reorderQuantity = item.reorder_quantity || 1;
-            ingredientSelect.appendChild(option);
-        });
-    }
-
-    // On ingredient change, update quantity input with reorder quantity
-    ingredientSelect.addEventListener('change', () => {
-        const selectedOption = ingredientSelect.options[ingredientSelect.selectedIndex];
-        const reorderQty = selectedOption.dataset.reorderQuantity || 1;
-        quantityInput.value = reorderQty;
-    });
-
-    // Fetch and display procurement orders
-    async function fetchOrders() {
-        const query = `
-        query {
-            procurementOrders {
+const CREATE_PROCUREMENT_ORDER = `
+    mutation($ingredientName: String!, $quantityOrdered: Int!, $supplier: String!) {
+        createProcurementOrder(ingredientName: $ingredientName, quantityOrdered: $quantityOrdered, supplier: $supplier) {
+            procurementOrder {
                 id
                 ingredientName
                 quantityOrdered
+                supplier
                 status
                 orderDate
-                supplier
             }
-        }`;
-        const response = await fetch('/graphql', {
+        }
+    }
+`;
+
+const UPDATE_PROCUREMENT_ORDER_STATUS = `
+    mutation($id: ID!, $status: String!) {
+        updateProcurementOrderStatus(id: $id, status: $status) {
+            procurementOrder {
+                id
+                ingredientName
+                quantityOrdered
+                supplier
+                status
+                orderDate
+            }
+        }
+    }
+`;
+
+const GET_INGREDIENTS_FROM_INVENTORY_SERVICE = `
+    query {
+        ingredients {
+            name
+        }
+    }
+`;
+
+const INVENTORY_SERVICE_GRAPHQL_ENDPOINT = 'http://localhost:5002/graphql';
+
+// Utility function to show toast notifications
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Function to fetch procurement orders and populate the table
+async function fetchProcurementOrders() {
+    try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({query})
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: GET_PROCUREMENT_ORDERS
+            })
         });
-        const result = await response.json();
-        const orders = result.data.procurementOrders;
-        ordersTableBody.innerHTML = '';
-        orders.forEach(order => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        const procurementOrderList = document.getElementById('procurementOrderList');
+        procurementOrderList.innerHTML = '';
+        
+        data.data.procurementOrders.forEach(order => {
+            const row = document.createElement('tr');
+            const orderDate = new Date(order.orderDate).toLocaleString();
+            row.innerHTML = `
                 <td>${order.ingredientName}</td>
                 <td>${order.quantityOrdered}</td>
                 <td>${order.status}</td>
-                <td>${new Date(order.orderDate).toLocaleString()}</td>
-                <td>${order.supplier || ''}</td>
+                <td>${orderDate}</td>
+                <td>${order.supplier}</td>
                 <td>
-                    <select data-id="${order.id}" class="status-select">
+                    <select class="form-select form-select-sm" onchange="showUpdateStatusModal('${order.id}', this.value)">
                         <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                        <option value="ordered" ${order.status === 'ordered' ? 'selected' : ''}>Ordered</option>
-                        <option value="received" ${order.status === 'received' ? 'selected' : ''}>Received</option>
+                        <option value="approved" ${order.status === 'approved' ? 'selected' : ''}>Approved</option>
+                        <option value="rejected" ${order.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
                     </select>
                 </td>
             `;
-            ordersTableBody.appendChild(tr);
+            procurementOrderList.appendChild(row);
         });
-
-        // Add event listeners to status selects
-        document.querySelectorAll('.status-select').forEach(select => {
-            select.addEventListener('change', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                const newStatus = e.target.value;
-                const mutation = `
-                mutation {
-                    updateProcurementOrderStatus(id: "${id}", status: "${newStatus}") {
-                        id
-                        status
-                    }
-                }`;
-                await fetch('/graphql', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({query: mutation})
-                });
-                fetchOrders();
-            });
-        });
+    } catch (error) {
+        showToast(`Error fetching procurement orders: ${error.message}`, 'danger');
     }
+}
 
-    // Handle form submission to create new order
-    orderForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const ingredientName = ingredientSelect.value;
-        const quantityOrdered = parseInt(quantityInput.value);
-        const supplier = supplierInput.value;
-
-        if (!ingredientName) {
-            alert('Please select an ingredient.');
-            return;
-        }
-
-        const mutation = `
-        mutation {
-            createProcurementOrder(ingredientName: "${ingredientName}", quantityOrdered: ${quantityOrdered}, supplier: "${supplier}") {
-                id
-                ingredientName
-                quantityOrdered
-                status
-                orderDate
-                supplier
-            }
-        }`;
-
-        await fetch('/graphql', {
+// Function to fetch ingredient names from Inventory Service
+async function fetchIngredientNames() {
+    try {
+        const response = await fetch(INVENTORY_SERVICE_GRAPHQL_ENDPOINT, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({query: mutation})
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: GET_INGREDIENTS_FROM_INVENTORY_SERVICE
+            })
         });
+        
+        console.log('Raw response from inventory_service:', response);
+        const data = await response.json();
+        console.log('Parsed data from inventory_service:', data);
 
-        orderForm.reset();
-        fetchOrders();
-    });
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        const ingredientSelect = document.getElementById('ingredientName');
+        data.data.ingredients.forEach(ingredient => {
+            const option = document.createElement('option');
+            option.value = ingredient.name;
+            option.textContent = ingredient.name;
+            ingredientSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error in fetchIngredientNames:', error);
+        showToast(`Error fetching ingredients: ${error.message}`, 'danger');
+    }
+}
 
-    fetchInventory();
-    fetchOrders();
-});
+// Function to handle creating a new procurement order
+async function createProcurementOrder(event) {
+    event.preventDefault();
+    
+    const ingredientName = document.getElementById('ingredientName').value;
+    const quantityOrdered = parseInt(document.getElementById('quantityOrdered').value);
+    const supplier = document.getElementById('supplier').value;
+    
+    try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: CREATE_PROCUREMENT_ORDER,
+                variables: { ingredientName, quantityOrdered, supplier }
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        showToast('Procurement order created successfully!');
+        event.target.reset();
+        fetchProcurementOrders();
+    } catch (error) {
+        showToast(`Error creating order: ${error.message}`, 'danger');
+    }
+}
+
+let currentOrderId = null;
+let currentOrderStatus = null;
+
+// Function to show update status modal
+function showUpdateStatusModal(orderId, currentStatus) {
+    currentOrderId = orderId;
+    currentOrderStatus = currentStatus; // Store current status
+
+    const editStatusModal = new bootstrap.Modal(document.getElementById('editStatusModal'));
+    document.getElementById('editOrderId').value = orderId;
+    document.getElementById('orderStatus').value = currentStatus; // Set current status in dropdown
+    editStatusModal.show();
+}
+
+// Function to submit status update
+async function submitStatusUpdate() {
+    const newStatus = document.getElementById('orderStatus').value;
+    
+    try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: UPDATE_PROCUREMENT_ORDER_STATUS,
+                variables: { id: currentOrderId, status: newStatus }
+            })
+        });
+        
+        const data = await response.json();
+        if (data.errors) {
+            throw new Error(data.errors[0].message);
+        }
+        
+        showToast('Order status updated successfully!');
+        const editStatusModal = bootstrap.Modal.getInstance(document.getElementById('editStatusModal'));
+        editStatusModal.hide();
+        fetchProcurementOrders();
+    } catch (error) {
+        showToast(`Error updating status: ${error.message}`, 'danger');
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    fetchProcurementOrders();
+    fetchIngredientNames();
+    
+    const procurementOrderForm = document.getElementById('procurementOrderForm');
+    if (procurementOrderForm) {
+        procurementOrderForm.addEventListener('submit', createProcurementOrder);
+    }
+}); 
