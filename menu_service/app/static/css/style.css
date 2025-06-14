@@ -1,0 +1,114 @@
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: #f9f9f9;
+  }
+
+  .layout {
+    display: flex;
+  }
+
+  .sidebar {
+    width: 220px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    padding: 20px;
+    height: 100vh;
+  }
+
+  .sidebar h2 {
+    margin-bottom: 30px;
+    font-size: 22px;
+    color: #007bff;
+  }
+
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar li {
+    margin: 15px 0;
+    color: #333;
+    cursor: pointer;
+  }
+
+  .sidebar li.active {
+    font-weight: bold;
+    color: #007bff;
+  }
+
+  .content {
+    flex: 1;
+    padding: 30px;
+    background: #f5f7fa;
+  }
+
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .top-controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  .top-controls input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 220px;
+  }
+
+  .btn.primary {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 14px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  .menu-table {
+    width: 100%;
+    margin-top: 30px;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+
+  .menu-table th, .menu-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .menu-table th {
+    background: #f1f5f9;
+    color: #333;
+  }
+
+  .thumb {
+    border-radius: 6px;
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+  }
+
+  .link {
+    text-decoration: none;
+    margin-right: 10px;
+  }
+
+  .link.edit {
+    color: #007bff;
+  }
+
+  .link.delete {
+    color: #dc3545;
+  }
