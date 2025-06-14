@@ -1,7 +1,0 @@
-Flask
-Flask-SQLAlchemy
-requests
-graphene
-graphene-sqlalchemy
-Flask-cors
-requests
