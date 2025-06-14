@@ -63,13 +63,4 @@ GraphQL endpoint tersedia di /graphql (contoh: http://localhost:5000/graphql).
 Semua data disimpan menggunakan SQLite secara default, dapat disesuaikan dengan PostgreSQL jika diperlukan.
 
 
-✨ Kontribusi
-Pull request dan ide pengembangan sangat diterima. Silakan buka issue jika menemukan bug atau kendala teknis.
-
-
-🧑‍💻 Developer
-Made with ❤️ by Mahasiswa Telkom University
-Contact: charlesrickybarnabas@gmail.com
-
-
 ---
