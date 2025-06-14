@@ -6,8 +6,6 @@
 
 ## 🧱 Struktur Folder
 
-## 🧱 Struktur Folder
-
 ```
 integration_manageResto/
 ├── user_service/
