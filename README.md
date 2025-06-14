@@ -1,22 +1,63 @@
-```bash
-step 1 
-cd user_service
-python -m venv venv
-.\venv\Scripts\activate 
-pip install -r requirements.txt
-pip install requests
+#!/bin/bash
 
-atau
-cd ..._service
-.\venv\Scripts\Activate.ps1
-python run.py
+echo "🍽️ Integration ManageResto — Microservice Restaurant Management System"
+echo "-----------------------------------------------------------------------"
+echo ""
+echo "This is a microservice-based restaurant management platform using Flask + GraphQL + Docker."
+echo ""
+echo "📦 Project Structure:"
+echo "
+integration_manageResto/
+├── user_service/
+├── menu_service/
+├── inventory_service/
+├── procurement_service/
+├── transaction_service/
+├── docker-compose.yml
+└── README.md
+"
+echo ""
+echo "🚀 Getting Started"
+echo "------------------"
 
-step 2
-python init_db.py
-python run.py
-```
+echo ""
+echo "🐳 Option 1: Run with Docker"
+echo "----------------------------"
+echo "1. cd integration_manageResto"
+echo "2. docker compose build && docker compose up -d"
+echo "3. docker compose restart nginx (optional)"
+echo ""
+echo "🖥️ Option 2: Run Locally via Python Virtual Environment"
+echo "--------------------------------------------------------"
 
-API User available at `http://localhost:5000`
-API Menu available at `http://localhost:5001`
-API Inventory available at `http://localhost:5002`
-API Procurement available at `http://localhost:5003`
+SERVICES=(user_service menu_service inventory_service procurement_service transaction_service)
+
+for SERVICE in "${SERVICES[@]}"; do
+    echo ""
+    echo "📦 Setting up: $SERVICE"
+    cd "$SERVICE" || exit
+    echo "Creating virtual environment for $SERVICE..."
+    python -m venv venv
+    source venv/bin/activate
+    echo "Installing requirements..."
+    pip install -r requirements.txt
+    echo "Running service..."
+    python run.py &
+    deactivate
+    cd ..
+done
+
+echo ""
+echo "✅ All services initialized in background"
+echo ""
+echo "🧪 Open browser and visit: http://localhost:5000 to register and login"
+echo ""
+echo "📡 API Endpoints:"
+echo "-----------------"
+echo "👤 User         : http://localhost:5000"
+echo "📋 Menu         : http://localhost:5001"
+echo "📦 Inventory    : http://localhost:5002"
+echo "🛒 Procurement  : http://localhost:5003"
+echo "💳 Transaction  : http://localhost:5004"
+echo ""
+echo "🎉 Done!"
