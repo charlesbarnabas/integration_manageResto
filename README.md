@@ -29,10 +29,6 @@ docker compose restart nginx # jika diperlukan
 🖥️ Jalankan Secara Lokal (Tanpa Docker)
 Lakukan untuk setiap service:
 
-
-bash
-Copy
-Edit
 cd <nama_service>          # contoh: cd user_service
 python -m venv venv        # buat virtual environment
 source venv/bin/activate   # atau .\venv\Scripts\activate (Windows)
