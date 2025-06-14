@@ -1,0 +1,9 @@
+Flask==2.3.3
+Flask-SQLAlchemy==2.5.1
+flask-graphql==2.0.1
+requests
+graphene==2.1.9
+graphene-sqlalchemy==2.3.0
+Flask-Login==0.6.2
+Werkzeug==2.3.7
+Flask-Cors==3.0.10

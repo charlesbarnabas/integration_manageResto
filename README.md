@@ -19,9 +19,4 @@ python run.py
 API User available at `http://localhost:5000`
 API Menu available at `http://localhost:5001`
 API Inventory available at `http://localhost:5002`
-<<<<<<< HEAD
 API Procurement available at `http://localhost:5003`
-=======
-API Procurement available at `http://localhost:5003`\
-API Transaction available at `http://localhost:5004`
->>>>>>> 71e1ad9e34fcbba4c4a24ea4829060623ce362ce

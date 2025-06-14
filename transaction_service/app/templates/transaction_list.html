@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manajemen Transaksi</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+        .sidebar {
+            width: 240px;
+            background: #4f46e5;
+            color: white;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar h2 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar li {
+            margin: 15px 0;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            text-decoration: underline;
+            padding-left: 4px;
+        }
+    </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Restoran</h2>
+      <ul>
+        <li><a href="http://localhost:5001/">📋 Menu</a></li>
+        <li><a href="http://localhost:5004/orders">🧾 Order</a></li>
+        <li><a href="http://localhost:5002/">📊 Inventory</a></li>
+        <li><a href="http://localhost:5004/transactions">💳 Transaksi</a></li>
+        <li><a href="http://localhost:5003/">⚙️ Procurement</a></li>
+      </ul>
+    </aside>
+    <main class="content">
+      <header class="content-header">
+        <h1>Manajemen Transaksi</h1>
+        <div class="top-controls" style="display:flex;align-items:center;gap:1.5em;">
+          <input type="text" id="search" placeholder="Cari transaksi..." style="flex:1; min-width:200px; max-width:260px; padding:0.7em 1em; border:1px solid #e5e7eb; border-radius:8px; font-size:1em; background:#f9fafb; transition: border 0.2s;" />
+        </div>
+      </header>
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-order" onclick="showTab('order')">Transaksi Order</button>
+        <button class="tab-btn" id="tab-procurement" onclick="showTab('procurement')">Transaksi Procurement</button>
+      </div>
+      <div id="order-transactions" class="tab-content">
+        <table class="menu-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Order ID</th>
+              <th>Nama Pelanggan</th>
+              <th>Status Order</th>
+              <th>Jumlah</th>
+              <th>Metode</th>
+              <th>Status</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+          <tbody id="transaction-table-body"></tbody>
+        </table>
+      </div>
+      <div id="procurement-transactions" class="tab-content" style="display:none;">
+        <table class="menu-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Procurement Order ID</th>
+              <th>Bahan</th>
+              <th>Qty</th>
+              <th>Supplier</th>
+              <th>Jumlah</th>
+              <th>Status</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+          <tbody id="procurement-table-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+  <script src="/static/js/transaction.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+
+services:
+  inventory_service:
+    build: ./inventory_service
+    ports:
+      - "5002:5002"
+    restart: always
+
+  menu_service:
+    build: ./menu_service
+    ports:
+      - "5001:5001"
+    restart: always
+
+  procurement_service:
+    build: ./procurement_service
+    ports:
+      - "5003:5003"
+    restart: always
+
+  user_service:
+    build: ./user_service
+    ports:
+      - "5000:5000"
+    restart: always
+
+  transaction_service:
+    build: ./transaction_service
+    ports:
+      - "5004:5004"
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./transaction_service/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - inventory_service
+      - menu_service
+      - procurement_service
+      - user_service
+      - transaction_service
