@@ -15,11 +15,8 @@ integration_manageResto/
 ├── docker-compose.yml
 └── README.md
 
-yaml
-Copy
-Edit
-
 ---
+
 
 ## 🚀 Cara Menjalankan
 
@@ -32,6 +29,7 @@ docker compose restart nginx # jika diperlukan
 🖥️ Jalankan Secara Lokal (Tanpa Docker)
 Lakukan untuk setiap service:
 
+
 bash
 Copy
 Edit
@@ -42,11 +40,13 @@ pip install -r requirements.txt
 python run.py
 Buka terminal baru dan jalankan service lainnya dengan cara yang sama.
 
+
 🧪 Uji Pertama Kali
 Jalankan user_service terlebih dahulu.
 Buka browser ke: http://localhost:5000
 Lakukan registrasi dan login sebagai user.
 Setelah itu, eksplorasi fitur lainnya melalui antarmuka frontend atau via GraphQL Playground.
+
 
 📡 API Endpoint
 Layanan	Port
@@ -56,30 +56,20 @@ Layanan	Port
 🛒 Procurement	http://localhost:5003
 💳 Transaction	http://localhost:5004
 
+
 📌 Catatan
 Setiap service berjalan secara independen.
 GraphQL endpoint tersedia di /graphql (contoh: http://localhost:5000/graphql).
 Semua data disimpan menggunakan SQLite secara default, dapat disesuaikan dengan PostgreSQL jika diperlukan.
 
+
 ✨ Kontribusi
 Pull request dan ide pengembangan sangat diterima. Silakan buka issue jika menemukan bug atau kendala teknis.
+
 
 🧑‍💻 Developer
 Made with ❤️ by Mahasiswa Telkom University
 Contact: charlesrickybarnabas@gmail.com
 
-yaml
-Copy
-Edit
 
 ---
-
-### Cara Pakai
-
-1. Simpan sebagai `README.md` di root folder project (`integration_manageResto/`)
-2. Commit dan push:
-
-```bash
-git add README.md
-git commit -m "Add structured project README"
-git push origin master
