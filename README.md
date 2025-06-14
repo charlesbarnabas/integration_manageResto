@@ -60,6 +60,6 @@ Layanan	Port
 Setiap service berjalan secara independen.
 GraphQL endpoint tersedia di /graphql (contoh: http://localhost:5000/graphql).
 Semua data disimpan menggunakan SQLite secara default, dapat disesuaikan dengan PostgreSQL jika diperlukan.
-
+```
 
 ---
