@@ -6,6 +6,9 @@
 
 ## 🧱 Struktur Folder
 
+## 🧱 Struktur Folder
+
+```
 integration_manageResto/
 ├── user_service/
 ├── menu_service/
@@ -14,6 +17,8 @@ integration_manageResto/
 ├── transaction_service/
 ├── docker-compose.yml
 └── README.md
+```
+
 
 ---
 
